@@ -219,8 +219,7 @@
         function getTargetDate() {
             const date = new Date(`${targetDate}T${targetTime}`);
             const targetTimezone = selectedTimezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland';
-            const targetDate = new Date(date.toLocaleString('en-US', { timeZone: targetTimezone }));
-            return targetDate;
+            return new Date(date.toLocaleString('en-US', { timeZone: targetTimezone }));
         }
 
         function updateWithSlide(wrapperId, newValue) {
@@ -246,7 +245,7 @@
         function getTimeRemaining() {
             const now = new Date();
             const targetDateTime = getTargetDate();
-            const difference = targetDateTime - now;
+            const difference = targetDateTime.getTime() - now.getTime();
 
             if (difference <= 0) {
                 return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
