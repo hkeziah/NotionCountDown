@@ -4,7 +4,6 @@
     <title>Event Countdown</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* ... Previous styles remain the same ... */
         * {
             margin: 0;
             padding: 0;
@@ -174,23 +173,29 @@
         const targetTime = urlParams.get('time') || '00:00';
         const timezone = urlParams.get('timezone') || 'UTC';
 
-        // Format the date and time for display
         function formatEventDateTime() {
             const dateObj = new Date(`${targetDate}T${targetTime}`);
-            const formatter = new Intl.DateTimeFormat('en-US', {
+            
+            // Format date
+            const dateFormatter = new Intl.DateTimeFormat('en-US', {
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric',
+                day: 'numeric'
+            });
+
+            // Format time
+            const timeFormatter = new Intl.DateTimeFormat('en-US', {
                 hour: 'numeric',
                 minute: '2-digit',
                 hour12: true,
                 timeZone: timezone
             });
 
-            const dateParts = formatter.formatToParts(dateObj);
-            const formattedDate = dateParts.map(part => part.value).join('');
+            const dateStr = dateFormatter.format(dateObj);
+            const timeStr = timeFormatter.format(dateObj);
+            
             document.getElementById('eventDateTime').textContent = 
-                `${formattedDate} ${timezone}`;
+                `${dateStr} at ${timeStr} ${timezone}`;
         }
 
         // Set target date in specified timezone
