@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Countdown</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: transparent;
+            padding: 10px;
+        }
+
+        .countdown-container {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            width: fit-content;
+        }
+
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 70px;
+        }
+
+        .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #37352f;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .label {
+            font-size: 0.8em;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .event-name {
+            margin-bottom: 10px;
+            font-size: 1em;
+            color: #37352f;
+            text-align: center;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 300px) {
+            .countdown-container {
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .time-box {
+                min-width: 60px;
+            }
+
+            .number {
+                font-size: 1.5em;
+                padding: 6px;
+            }
+
+            .label {
+                font-size: 0.7em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="event-name" id="eventName"></div>
+    <div class="countdown-container">
+        <div class="time-box">
+            <div class="number" id="days">0</div>
+            <div class="label">Days</div>
+        </div>
+        <div class="time-box">
+            <div class="number" id="hours">0</div>
+            <div class="label">Hours</div>
+        </div>
+        <div class="time-box">
+            <div class="number" id="minutes">0</div>
+            <div class="label">Min</div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetDate = urlParams.get('date') || '2024-12-31';
+        const targetTime = urlParams.get('time') || '00:00';
+        const eventName = urlParams.get('event') || 'Countdown';
+
+        document.getElementById('eventName').textContent = eventName;
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const target = new Date(`${targetDate}T${targetTime}`).getTime();
+            const difference = target - now;
+
+            if (difference <= 0) {
+                document.getElementById('days').textContent = '0';
+                document.getElementById('hours').textContent = '0';
+                document.getElementById('minutes').textContent = '0';
+                return;
+            }
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours;
+            document.getElementById('minutes').textContent = minutes;
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 60000);
+    </script>
+</body>
+</html>
