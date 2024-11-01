@@ -175,8 +175,8 @@
 
         function formatEventDateTime() {
             try {
-                const dateObj = new Date(`${targetDate}T${targetTime}:00${timezone === 'UTC' ? 'Z' : ''}`);
-                const formatter = new Intl.DateTimeFormat('en-US', {
+                // Create date using the target timezone
+                const options = {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -184,9 +184,13 @@
                     minute: '2-digit',
                     hour12: true,
                     timeZone: timezone
-                });
+                };
 
-                const formattedDateTime = formatter.format(dateObj);
+                // Convert to target timezone and format
+                const eventDate = new Date(`${targetDate}T${targetTime}:00`);
+                const formatter = new Intl.DateTimeFormat('en-US', options);
+                const formattedDateTime = formatter.format(eventDate);
+                
                 document.getElementById('eventDateTime').textContent = 
                     `${formattedDateTime} ${timezone}`;
             } catch (e) {
@@ -196,8 +200,14 @@
             }
         }
 
-        // Set target date in specified timezone
-        const targetDateTime = new Date(`${targetDate}T${targetTime}:00${timezone === 'UTC' ? 'Z' : ''}`);
+        // Calculate target date in the specified timezone for countdown
+        function getTargetDate() {
+            const date = new Date(`${targetDate}T${targetTime}:00`);
+            const targetTzOffset = new Date(date.toLocaleString('en-US', {timeZone: timezone})).getTime() - date.getTime();
+            return new Date(date.getTime() + targetTzOffset);
+        }
+
+        const targetDateTime = getTargetDate();
 
         function updateWithSlide(wrapperId, newValue) {
             const wrapper = document.getElementById(wrapperId);
