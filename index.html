@@ -26,12 +26,16 @@
             padding: 20px 10px;
         }
 
-        h3 {
-            font-size: 1.1em;
+        h2, h3 {
+            font-size: 1.2em;
             color: #333;
             font-weight: normal;
             margin-bottom: 20px;
             text-align: center;
+        }
+
+        .toggle-container {
+            margin-bottom: 20px;
         }
 
         .countdown-container {
@@ -141,7 +145,16 @@
     </style>
 </head>
 <body>
-    <h3 id="eventDateTime"></h3>
+    <h2 id="eventDateTime"></h2>
+    <div class="toggle-container">
+        <label>
+            Select Timezone:
+            <select id="timezoneToggle">
+                <option value="EST">EST</option>
+                <option value="NZDT">NZDT</option>
+            </select>
+        </label>
+    </div>
     <div class="countdown-container">
         <div class="time-box">
             <div class="number-wrapper" id="days-wrapper">
@@ -171,7 +184,13 @@
         const urlParams = new URLSearchParams(window.location.search);
         const targetDate = urlParams.get('date') || '2024-12-31';
         const targetTime = urlParams.get('time') || '00:00';
-        const timezone = urlParams.get('timezone') || 'UTC';
+        let selectedTimezone = 'EST';
+
+        document.getElementById('timezoneToggle').addEventListener('change', (event) => {
+            selectedTimezone = event.target.value;
+            formatEventDateTime();
+            updateCountdown();
+        });
 
         function formatEventDateTime() {
             try {
@@ -180,10 +199,7 @@
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true,
-                    timeZone: timezone
+                    timeZone: selectedTimezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland'
                 };
 
                 const tzDate = new Date(`${targetDate}T${targetTime}`);
@@ -191,28 +207,21 @@
                 const formattedDateTime = formatter.format(tzDate);
 
                 document.getElementById('eventDateTime').textContent = 
-                    `${formattedDateTime} ${timezone}`;
+                    `${formattedDateTime} (${selectedTimezone})`;
             } catch (e) {
                 console.error('Error formatting date:', e);
                 document.getElementById('eventDateTime').textContent = 
-                    `${targetDate} at ${targetTime} ${timezone}`;
+                    `${targetDate} at ${targetTime} (${selectedTimezone})`;
             }
         }
 
         // Calculate target date in the specified timezone for countdown
         function getTargetDate() {
-            const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const date = new Date(`${targetDate}T${targetTime}`);
-            
-            // Convert the time as if it was entered in the target timezone
-            const targetDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-            const userDate = new Date(date.toLocaleString('en-US', { timeZone: userTz }));
-            const diff = targetDate.getTime() - userDate.getTime();
-            
-            return new Date(date.getTime() + diff);
+            const targetTimezone = selectedTimezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland';
+            const targetDate = new Date(date.toLocaleString('en-US', { timeZone: targetTimezone }));
+            return targetDate;
         }
-
-        const targetDateTime = getTargetDate();
 
         function updateWithSlide(wrapperId, newValue) {
             const wrapper = document.getElementById(wrapperId);
@@ -236,6 +245,7 @@
 
         function getTimeRemaining() {
             const now = new Date();
+            const targetDateTime = getTargetDate();
             const difference = targetDateTime - now;
 
             if (difference <= 0) {
