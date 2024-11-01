@@ -33,18 +33,13 @@
             backdrop-filter: blur(5px);
             border-radius: 12px;
             width: fit-content;
-            align-items: flex-end; /* Align items to baseline */
+            align-items: flex-end;
         }
 
         .time-box {
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 70px;
-        }
-
-        .time-box.seconds {
-            min-width: 52px; /* Adjusted for smaller size */
         }
 
         .number-wrapper {
@@ -55,13 +50,6 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             min-width: 60px;
-        }
-
-        .number-wrapper.seconds-wrapper {
-            height: 45px; /* 75% of original height */
-            min-width: 45px;
-            background: transparent;
-            box-shadow: none;
         }
 
         .number {
@@ -84,12 +72,20 @@
             transform: translateY(100%);
         }
 
-        .seconds .number {
-            position: static; /* Remove absolute positioning for seconds */
-            font-size: 1.875em; /* 75% of original 2.5em */
-            color: #999; /* Light grey for seconds */
-            padding: 7.5px; /* 75% of original padding */
-            transition: none; /* No animation for seconds */
+        /* Specific styles for seconds */
+        .seconds-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2px; /* Fine-tune baseline alignment */
+        }
+
+        .seconds-number {
+            font-size: 1.875em; /* 75% of 2.5em */
+            font-weight: bold;
+            color: #999;
+            min-width: 45px;
+            text-align: center;
         }
 
         .label {
@@ -101,8 +97,13 @@
             margin-top: 10px;
         }
 
-        .seconds .label {
-            color: #999; /* Light grey for seconds label */
+        .seconds-label {
+            font-size: 0.8em;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-bottom: 20px;
+            margin-top: 10px;
         }
 
         @media (max-width: 400px) {
@@ -111,33 +112,21 @@
                 padding: 0 10px;
             }
 
-            .time-box {
-                min-width: 60px;
-            }
-
-            .time-box.seconds {
-                min-width: 45px;
-            }
-
             .number-wrapper {
                 min-width: 50px;
                 height: 50px;
-            }
-
-            .number-wrapper.seconds-wrapper {
-                height: 37.5px;
-                min-width: 37.5px;
             }
 
             .number {
                 font-size: 2em;
             }
 
-            .seconds .number {
+            .seconds-number {
                 font-size: 1.5em;
+                min-width: 37px;
             }
 
-            .label {
+            .label, .seconds-label {
                 font-size: 0.7em;
             }
         }
@@ -163,11 +152,9 @@
             </div>
             <div class="label">Min</div>
         </div>
-        <div class="time-box seconds">
-            <div class="number-wrapper seconds-wrapper">
-                <div class="number">00</div>
-            </div>
-            <div class="label">Sec</div>
+        <div class="seconds-box">
+            <div id="seconds" class="seconds-number">00</div>
+            <div class="seconds-label">Sec</div>
         </div>
     </div>
 
@@ -179,13 +166,6 @@
 
         function updateWithSlide(wrapperId, newValue) {
             const wrapper = document.getElementById(wrapperId);
-            
-            // For seconds, just update the text
-            if (wrapperId === 'seconds-wrapper') {
-                wrapper.querySelector('.number').textContent = newValue;
-                return;
-            }
-            
             const currentNumber = wrapper.querySelector('.number');
             if (currentNumber.textContent === newValue.toString()) {
                 return;
@@ -235,7 +215,7 @@
                 if (previousValues.days !== 0) updateWithSlide('days-wrapper', 0);
                 if (previousValues.hours !== 0) updateWithSlide('hours-wrapper', '00');
                 if (previousValues.minutes !== 0) updateWithSlide('minutes-wrapper', '00');
-                if (previousValues.seconds !== 0) updateWithSlide('seconds-wrapper', '00');
+                document.getElementById('seconds').textContent = '00';
                 previousValues = { days: 0, hours: 0, minutes: 0, seconds: 0 };
                 return;
             }
@@ -249,9 +229,9 @@
             if (t.minutes !== previousValues.minutes) {
                 updateWithSlide('minutes-wrapper', t.minutes.toString().padStart(2, '0'));
             }
-            if (t.seconds !== previousValues.seconds) {
-                updateWithSlide('seconds-wrapper', t.seconds.toString().padStart(2, '0'));
-            }
+            
+            // Simply update seconds text without animation
+            document.getElementById('seconds').textContent = t.seconds.toString().padStart(2, '0');
 
             previousValues = { days: t.days, hours: t.hours, minutes: t.minutes, seconds: t.seconds };
         }
