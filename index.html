@@ -77,13 +77,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 2px; /* Fine-tune baseline alignment */
+            margin-bottom: 2px;
         }
 
         .seconds-number {
-            font-size: 1.875em; /* 75% of 2.5em */
+            font-size: 1.875em;
             font-weight: bold;
-            color: #999;
+            color: #CCCCCC; /* Lighter grey for seconds */
             min-width: 45px;
             text-align: center;
         }
@@ -99,7 +99,7 @@
 
         .seconds-label {
             font-size: 0.8em;
-            color: #999;
+            color: #CCCCCC; /* Lighter grey for seconds label */
             text-transform: uppercase;
             letter-spacing: 1px;
             padding-bottom: 20px;
@@ -230,18 +230,17 @@
                 updateWithSlide('minutes-wrapper', t.minutes.toString().padStart(2, '0'));
             }
             
-            // Simply update seconds text without animation
+            // Update seconds without animation
             document.getElementById('seconds').textContent = t.seconds.toString().padStart(2, '0');
 
             previousValues = { days: t.days, hours: t.hours, minutes: t.minutes, seconds: t.seconds };
         }
 
+        // Initial update
         updateCountdown();
+        
+        // Update every second
         setInterval(updateCountdown, 1000);
-        setInterval(() => {
-            previousValues = { days: -1, hours: -1, minutes: -1, seconds: -1 };
-            updateCountdown();
-        }, 60000);
     </script>
 </body>
 </html>
