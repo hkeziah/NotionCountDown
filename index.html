@@ -202,27 +202,23 @@
                     hour: 'numeric',
                     minute: '2-digit',
                     hour12: true,
-                    timeZone: selectedTimezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland'
+                    
                 };
 
                 const tzDate = new Date(`${targetDate}T${targetTime}`);
                 const formatter = new Intl.DateTimeFormat('en-US', options);
                 const formattedDateTime = formatter.format(tzDate);
 
-                document.getElementById('eventDateTime').textContent = 
-                    `${formattedDateTime} (${selectedTimezone})`;
+                document.getElementById('eventDateTime').textContent = formattedDateTime;
             } catch (e) {
                 console.error('Error formatting date:', e);
-                document.getElementById('eventDateTime').textContent = 
-                    `${targetDate} at ${targetTime} (${selectedTimezone})`;
+                document.getElementById('eventDateTime').textContent = `${targetDate} at ${targetTime}`;
             }
         }
 
-        // Calculate target date in the specified timezone for countdown
+        // Calculate target date for countdown (independent of local timezone)
         function getTargetDate() {
-            const date = new Date(`${targetDate}T${targetTime}`);
-            const targetTimezone = selectedTimezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland';
-            return new Date(date.toLocaleString('en-US', { timeZone: targetTimezone }));
+            return new Date(`${targetDate}T${targetTime}:00Z`);
         }
 
         function updateWithSlide(wrapperId, newValue) {
