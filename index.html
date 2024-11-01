@@ -115,6 +115,9 @@
         const targetDate = urlParams.get('date') || '2024-12-31';
         const targetTime = urlParams.get('time') || '00:00';
 
+        // Convert target time to user's timezone
+        const targetDateTime = new Date(`${targetDate}T${targetTime}`);
+
         function updateWithFade(element, newValue) {
             if (element.textContent !== newValue.toString()) {
                 element.classList.add('fade-out');
@@ -132,12 +135,26 @@
             seconds: 0
         };
 
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const target = new Date(`${targetDate}T${targetTime}`).getTime();
-            const difference = target - now;
+        function getTimeRemaining() {
+            const now = new Date();
+            const difference = targetDateTime - now;
 
             if (difference <= 0) {
+                return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
+            }
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            return { days, hours, minutes, seconds, total: difference };
+        }
+
+        function updateCountdown() {
+            const t = getTimeRemaining();
+
+            if (t.total <= 0) {
                 const elements = ['days', 'hours', 'minutes', 'seconds'];
                 elements.forEach(unit => {
                     const element = document.getElementById(unit);
@@ -148,30 +165,40 @@
                 return;
             }
 
-            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
             // Only update if values have changed
-            if (days !== previousValues.days) {
-                updateWithFade(document.getElementById('days'), days);
+            if (t.days !== previousValues.days) {
+                updateWithFade(document.getElementById('days'), t.days);
             }
-            if (hours !== previousValues.hours) {
-                updateWithFade(document.getElementById('hours'), hours.toString().padStart(2, '0'));
+            if (t.hours !== previousValues.hours) {
+                updateWithFade(document.getElementById('hours'), t.hours.toString().padStart(2, '0'));
             }
-            if (minutes !== previousValues.minutes) {
-                updateWithFade(document.getElementById('minutes'), minutes.toString().padStart(2, '0'));
+            if (t.minutes !== previousValues.minutes) {
+                updateWithFade(document.getElementById('minutes'), t.minutes.toString().padStart(2, '0'));
             }
-            if (seconds !== previousValues.seconds) {
-                updateWithFade(document.getElementById('seconds'), seconds.toString().padStart(2, '0'));
+            if (t.seconds !== previousValues.seconds) {
+                updateWithFade(document.getElementById('seconds'), t.seconds.toString().padStart(2, '0'));
             }
 
-            previousValues = { days, hours, minutes, seconds };
+            previousValues = { days: t.days, hours: t.hours, minutes: t.minutes, seconds: t.seconds };
         }
 
+        // Initial update
         updateCountdown();
+
+        // Update every second
         setInterval(updateCountdown, 1000);
+
+        // Sync with server time every minute to prevent drift
+        setInterval(() => {
+            // Force a complete refresh of all values
+            previousValues = {
+                days: -1,
+                hours: -1,
+                minutes: -1,
+                seconds: -1
+            };
+            updateCountdown();
+        }, 60000);
     </script>
 </body>
 </html>
