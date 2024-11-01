@@ -43,79 +43,18 @@
             min-width: 70px;
         }
 
-        .flip-card {
-            position: relative;
-            width: 50px;
-            height: 60px;
-            background-color: #fff;
-            border-radius: 8px;
-            perspective: 400px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-
-        .top, .bottom, .flip-top, .flip-bottom {
-            position: absolute;
-            width: 100%;
-            height: 50%;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2em;
+        .number {
+            font-size: 2.5em;
             font-weight: bold;
-            color: #37352f;
-            background: #f0f0f0;
-        }
-
-        .top {
-            background: #f8f8f8;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .bottom {
-            bottom: 0;
-            background: #f0f0f0;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-            line-height: 0;
-        }
-
-        .flip-top, .flip-bottom {
-            position: absolute;
-            height: 50%;
-            width: 100%;
-            transform-origin: bottom;
-            backface-visibility: hidden;
-        }
-
-        .flip-top {
-            background: #f8f8f8;
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            border-bottom: 1px solid rgba(0,0,0,0.1);
-            animation: flip-top 0.6s ease-out;
-            transform-origin: bottom;
-        }
-
-        .flip-bottom {
-            bottom: 0;
-            background: #f0f0f0;
-            border-bottom-left-radius: 8px;
-            border-bottom-right-radius: 8px;
-            line-height: 0;
-            animation: flip-bottom 0.6s ease-in;
-        }
-
-        @keyframes flip-top {
-            0% { transform: rotateX(0deg); }
-            100% { transform: rotateX(-90deg); }
-        }
-
-        @keyframes flip-bottom {
-            0% { transform: rotateX(90deg); }
-            100% { transform: rotateX(0deg); }
+            color: #333;
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            min-width: 60px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            opacity: 1;
+            transition: opacity 0.3s ease-in-out;
         }
 
         .label {
@@ -138,6 +77,10 @@
             margin-bottom: 20px;
         }
 
+        .fade-out {
+            opacity: 0;
+        }
+
         @media (max-width: 400px) {
             .countdown-container {
                 gap: 10px;
@@ -148,9 +91,9 @@
                 min-width: 60px;
             }
 
-            .flip-card {
-                width: 45px;
-                height: 55px;
+            .number {
+                font-size: 2em;
+                min-width: 50px;
             }
 
             .label {
@@ -163,31 +106,19 @@
     <div class="event-name" id="eventName"></div>
     <div class="countdown-container">
         <div class="time-box">
-            <div class="flip-card" id="days-card">
-                <div class="top">0</div>
-                <div class="bottom">0</div>
-            </div>
+            <div class="number" id="days">0</div>
             <div class="label">Days</div>
         </div>
         <div class="time-box">
-            <div class="flip-card" id="hours-card">
-                <div class="top">00</div>
-                <div class="bottom">00</div>
-            </div>
+            <div class="number" id="hours">00</div>
             <div class="label">Hours</div>
         </div>
         <div class="time-box">
-            <div class="flip-card" id="minutes-card">
-                <div class="top">00</div>
-                <div class="bottom">00</div>
-            </div>
+            <div class="number" id="minutes">00</div>
             <div class="label">Min</div>
         </div>
         <div class="time-box">
-            <div class="flip-card" id="seconds-card">
-                <div class="top">00</div>
-                <div class="bottom">00</div>
-            </div>
+            <div class="number" id="seconds">00</div>
             <div class="label">Sec</div>
         </div>
     </div>
@@ -200,37 +131,14 @@
 
         document.getElementById('eventName').textContent = eventName;
 
-        function updateFlipCard(cardId, newValue, prevValue) {
-            if (newValue === prevValue) return;
-
-            const card = document.getElementById(cardId);
-            const formattedValue = cardId === 'days-card' ? 
-                newValue : 
-                newValue.toString().padStart(2, '0');
-
-            // Remove existing flip elements if any
-            const existingFlips = card.querySelectorAll('.flip-top, .flip-bottom');
-            existingFlips.forEach(el => el.remove());
-
-            // Create and add new flip elements
-            const flipTop = document.createElement('div');
-            flipTop.className = 'flip-top';
-            flipTop.textContent = prevValue;
-
-            const flipBottom = document.createElement('div');
-            flipBottom.className = 'flip-bottom';
-            flipBottom.textContent = formattedValue;
-
-            card.appendChild(flipTop);
-            card.appendChild(flipBottom);
-
-            // Update the static elements
-            setTimeout(() => {
-                card.querySelector('.top').textContent = formattedValue;
-                card.querySelector('.bottom').textContent = formattedValue;
-                flipTop.remove();
-                flipBottom.remove();
-            }, 600);
+        function updateWithFade(element, newValue) {
+            if (element.textContent !== newValue.toString()) {
+                element.classList.add('fade-out');
+                setTimeout(() => {
+                    element.textContent = newValue;
+                    element.classList.remove('fade-out');
+                }, 300);
+            }
         }
 
         let previousValues = {
@@ -246,9 +154,12 @@
             const difference = target - now;
 
             if (difference <= 0) {
-                ['days', 'hours', 'minutes', 'seconds'].forEach(unit => {
-                    updateFlipCard(`${unit}-card`, 0, previousValues[unit]);
-                    previousValues[unit] = 0;
+                const elements = ['days', 'hours', 'minutes', 'seconds'];
+                elements.forEach(unit => {
+                    const element = document.getElementById(unit);
+                    if (element.textContent !== '0') {
+                        updateWithFade(element, 0);
+                    }
                 });
                 return;
             }
@@ -258,10 +169,19 @@
             const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-            updateFlipCard('days-card', days, previousValues.days);
-            updateFlipCard('hours-card', hours, previousValues.hours);
-            updateFlipCard('minutes-card', minutes, previousValues.minutes);
-            updateFlipCard('seconds-card', seconds, previousValues.seconds);
+            // Only update if values have changed
+            if (days !== previousValues.days) {
+                updateWithFade(document.getElementById('days'), days);
+            }
+            if (hours !== previousValues.hours) {
+                updateWithFade(document.getElementById('hours'), hours.toString().padStart(2, '0'));
+            }
+            if (minutes !== previousValues.minutes) {
+                updateWithFade(document.getElementById('minutes'), minutes.toString().padStart(2, '0'));
+            }
+            if (seconds !== previousValues.seconds) {
+                updateWithFade(document.getElementById('seconds'), seconds.toString().padStart(2, '0'));
+            }
 
             previousValues = { days, hours, minutes, seconds };
         }
