@@ -23,7 +23,7 @@
             align-items: center;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: transparent;
-            padding: 20px 10px; /* 20px top and bottom padding */
+            padding: 20px 10px;
         }
 
         .countdown-container {
@@ -43,15 +43,79 @@
             min-width: 70px;
         }
 
-        .number {
+        .flip-card {
+            position: relative;
+            width: 50px;
+            height: 60px;
+            background-color: #fff;
+            border-radius: 8px;
+            perspective: 400px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .top, .bottom, .flip-top, .flip-bottom {
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-size: 2em;
             font-weight: bold;
             color: #37352f;
-            background: rgba(255, 255, 255, 0.5);
-            padding: 8px;
-            border-radius: 8px;
-            min-width: 50px;
-            text-align: center;
+            background: #f0f0f0;
+        }
+
+        .top {
+            background: #f8f8f8;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .bottom {
+            bottom: 0;
+            background: #f0f0f0;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            line-height: 0;
+        }
+
+        .flip-top, .flip-bottom {
+            position: absolute;
+            height: 50%;
+            width: 100%;
+            transform-origin: bottom;
+            backface-visibility: hidden;
+        }
+
+        .flip-top {
+            background: #f8f8f8;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            animation: flip-top 0.6s ease-out;
+            transform-origin: bottom;
+        }
+
+        .flip-bottom {
+            bottom: 0;
+            background: #f0f0f0;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            line-height: 0;
+            animation: flip-bottom 0.6s ease-in;
+        }
+
+        @keyframes flip-top {
+            0% { transform: rotateX(0deg); }
+            100% { transform: rotateX(-90deg); }
+        }
+
+        @keyframes flip-bottom {
+            0% { transform: rotateX(90deg); }
+            100% { transform: rotateX(0deg); }
         }
 
         .label {
@@ -59,7 +123,8 @@
             color: #666;
             text-transform: uppercase;
             letter-spacing: 1px;
-            padding-bottom: 20px; /* 20px bottom spacing */
+            padding-bottom: 20px;
+            margin-top: 10px;
         }
 
         .event-name {
@@ -70,7 +135,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            margin-bottom: 20px; /* 20px spacing between title and numbers */
+            margin-bottom: 20px;
         }
 
         @media (max-width: 400px) {
@@ -83,9 +148,9 @@
                 min-width: 60px;
             }
 
-            .number {
-                font-size: 1.5em;
-                padding: 6px;
+            .flip-card {
+                width: 45px;
+                height: 55px;
             }
 
             .label {
@@ -98,19 +163,31 @@
     <div class="event-name" id="eventName"></div>
     <div class="countdown-container">
         <div class="time-box">
-            <div class="number" id="days">0</div>
+            <div class="flip-card" id="days-card">
+                <div class="top">0</div>
+                <div class="bottom">0</div>
+            </div>
             <div class="label">Days</div>
         </div>
         <div class="time-box">
-            <div class="number" id="hours">0</div>
+            <div class="flip-card" id="hours-card">
+                <div class="top">00</div>
+                <div class="bottom">00</div>
+            </div>
             <div class="label">Hours</div>
         </div>
         <div class="time-box">
-            <div class="number" id="minutes">0</div>
+            <div class="flip-card" id="minutes-card">
+                <div class="top">00</div>
+                <div class="bottom">00</div>
+            </div>
             <div class="label">Min</div>
         </div>
         <div class="time-box">
-            <div class="number" id="seconds">0</div>
+            <div class="flip-card" id="seconds-card">
+                <div class="top">00</div>
+                <div class="bottom">00</div>
+            </div>
             <div class="label">Sec</div>
         </div>
     </div>
@@ -123,13 +200,74 @@
 
         document.getElementById('eventName').textContent = eventName;
 
+        function updateFlipCard(cardId, newValue, prevValue) {
+            if (newValue === prevValue) return;
+
+            const card = document.getElementById(cardId);
+            const formattedValue = cardId === 'days-card' ? 
+                newValue : 
+                newValue.toString().padStart(2, '0');
+
+            // Remove existing flip elements if any
+            const existingFlips = card.querySelectorAll('.flip-top, .flip-bottom');
+            existingFlips.forEach(el => el.remove());
+
+            // Create and add new flip elements
+            const flipTop = document.createElement('div');
+            flipTop.className = 'flip-top';
+            flipTop.textContent = prevValue;
+
+            const flipBottom = document.createElement('div');
+            flipBottom.className = 'flip-bottom';
+            flipBottom.textContent = formattedValue;
+
+            card.appendChild(flipTop);
+            card.appendChild(flipBottom);
+
+            // Update the static elements
+            setTimeout(() => {
+                card.querySelector('.top').textContent = formattedValue;
+                card.querySelector('.bottom').textContent = formattedValue;
+                flipTop.remove();
+                flipBottom.remove();
+            }, 600);
+        }
+
+        let previousValues = {
+            days: 0,
+            hours: 0,
+            minutes: 0,
+            seconds: 0
+        };
+
         function updateCountdown() {
             const now = new Date().getTime();
             const target = new Date(`${targetDate}T${targetTime}`).getTime();
             const difference = target - now;
 
             if (difference <= 0) {
-                document.getElementById('days').textContent = '0';
-                document.getElementById('hours').textContent = '00';
-                document.getElementById('minutes').textContent = '00';
-                document.getElementById('seconds').textContent = '00';
+                ['days', 'hours', 'minutes', 'seconds'].forEach(unit => {
+                    updateFlipCard(`${unit}-card`, 0, previousValues[unit]);
+                    previousValues[unit] = 0;
+                });
+                return;
+            }
+
+            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+            updateFlipCard('days-card', days, previousValues.days);
+            updateFlipCard('hours-card', hours, previousValues.hours);
+            updateFlipCard('minutes-card', minutes, previousValues.minutes);
+            updateFlipCard('seconds-card', seconds, previousValues.seconds);
+
+            previousValues = { days, hours, minutes, seconds };
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
