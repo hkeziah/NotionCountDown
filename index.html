@@ -175,7 +175,7 @@
 
         function formatEventDateTime() {
             try {
-                // Create date using the target timezone
+                // Create a date string with explicit timezone
                 const options = {
                     year: 'numeric',
                     month: 'long',
@@ -186,11 +186,10 @@
                     timeZone: timezone
                 };
 
-                // Convert to target timezone and format
-                const eventDate = new Date(`${targetDate}T${targetTime}:00`);
+                const tzDate = new Date(`${targetDate}T${targetTime}`);
                 const formatter = new Intl.DateTimeFormat('en-US', options);
-                const formattedDateTime = formatter.format(eventDate);
-                
+                const formattedDateTime = formatter.format(tzDate);
+
                 document.getElementById('eventDateTime').textContent = 
                     `${formattedDateTime} ${timezone}`;
             } catch (e) {
@@ -202,9 +201,15 @@
 
         // Calculate target date in the specified timezone for countdown
         function getTargetDate() {
-            const date = new Date(`${targetDate}T${targetTime}:00`);
-            const targetTzOffset = new Date(date.toLocaleString('en-US', {timeZone: timezone})).getTime() - date.getTime();
-            return new Date(date.getTime() + targetTzOffset);
+            const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const date = new Date(`${targetDate}T${targetTime}`);
+            
+            // Convert the time as if it was entered in the target timezone
+            const targetDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+            const userDate = new Date(date.toLocaleString('en-US', { timeZone: userTz }));
+            const diff = targetDate.getTime() - userDate.getTime();
+            
+            return new Date(date.getTime() + diff);
         }
 
         const targetDateTime = getTargetDate();
