@@ -42,18 +42,34 @@
             min-width: 70px;
         }
 
+        .number-wrapper {
+            position: relative;
+            height: 60px; /* Fixed height to prevent layout shift */
+            overflow: hidden;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 60px;
+        }
+
         .number {
+            position: absolute;
+            width: 100%;
+            text-align: center;
             font-size: 2.5em;
             font-weight: bold;
             color: #333;
-            background: #fff;
             padding: 10px;
-            border-radius: 8px;
-            min-width: 60px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            opacity: 1;
-            transition: opacity 0.3s ease-in-out;
+            transform: translateY(0);
+            transition: transform 0.3s ease-out;
+        }
+
+        .number.old {
+            transform: translateY(-100%);
+        }
+
+        .number.new {
+            transform: translateY(100%);
         }
 
         .label {
@@ -63,10 +79,6 @@
             letter-spacing: 1px;
             padding-bottom: 20px;
             margin-top: 10px;
-        }
-
-        .fade-out {
-            opacity: 0;
         }
 
         @media (max-width: 400px) {
@@ -79,9 +91,13 @@
                 min-width: 60px;
             }
 
+            .number-wrapper {
+                min-width: 50px;
+                height: 50px;
+            }
+
             .number {
                 font-size: 2em;
-                min-width: 50px;
             }
 
             .label {
@@ -93,19 +109,27 @@
 <body>
     <div class="countdown-container">
         <div class="time-box">
-            <div class="number" id="days">0</div>
+            <div class="number-wrapper" id="days-wrapper">
+                <div class="number">0</div>
+            </div>
             <div class="label">Days</div>
         </div>
         <div class="time-box">
-            <div class="number" id="hours">00</div>
+            <div class="number-wrapper" id="hours-wrapper">
+                <div class="number">00</div>
+            </div>
             <div class="label">Hours</div>
         </div>
         <div class="time-box">
-            <div class="number" id="minutes">00</div>
+            <div class="number-wrapper" id="minutes-wrapper">
+                <div class="number">00</div>
+            </div>
             <div class="label">Min</div>
         </div>
         <div class="time-box">
-            <div class="number" id="seconds">00</div>
+            <div class="number-wrapper" id="seconds-wrapper">
+                <div class="number">00</div>
+            </div>
             <div class="label">Sec</div>
         </div>
     </div>
@@ -114,26 +138,34 @@
         const urlParams = new URLSearchParams(window.location.search);
         const targetDate = urlParams.get('date') || '2024-12-31';
         const targetTime = urlParams.get('time') || '00:00';
-
-        // Convert target time to user's timezone
         const targetDateTime = new Date(`${targetDate}T${targetTime}`);
 
-        function updateWithFade(element, newValue) {
-            if (element.textContent !== newValue.toString()) {
-                element.classList.add('fade-out');
-                setTimeout(() => {
-                    element.textContent = newValue;
-                    element.classList.remove('fade-out');
-                }, 300);
+        function updateWithSlide(wrapperId, newValue) {
+            const wrapper = document.getElementById(wrapperId);
+            const currentNumber = wrapper.querySelector('.number');
+            
+            if (currentNumber.textContent === newValue.toString()) {
+                return;
             }
-        }
 
-        let previousValues = {
-            days: 0,
-            hours: 0,
-            minutes: 0,
-            seconds: 0
-        };
+            const oldNumber = currentNumber;
+            const newNumber = document.createElement('div');
+            
+            newNumber.className = 'number new';
+            newNumber.textContent = newValue;
+            
+            wrapper.appendChild(newNumber);
+            
+            // Trigger reflow
+            wrapper.offsetHeight;
+            
+            oldNumber.classList.add('old');
+            newNumber.style.transform = 'translateY(0)';
+            
+            setTimeout(() => {
+                oldNumber.remove();
+            }, 300);
+        }
 
         function getTimeRemaining() {
             const now = new Date();
@@ -151,52 +183,46 @@
             return { days, hours, minutes, seconds, total: difference };
         }
 
+        let previousValues = {
+            days: -1,
+            hours: -1,
+            minutes: -1,
+            seconds: -1
+        };
+
         function updateCountdown() {
             const t = getTimeRemaining();
 
             if (t.total <= 0) {
-                const elements = ['days', 'hours', 'minutes', 'seconds'];
-                elements.forEach(unit => {
-                    const element = document.getElementById(unit);
-                    if (element.textContent !== '0') {
-                        updateWithFade(element, 0);
-                    }
-                });
+                if (previousValues.days !== 0) updateWithSlide('days-wrapper', 0);
+                if (previousValues.hours !== 0) updateWithSlide('hours-wrapper', '00');
+                if (previousValues.minutes !== 0) updateWithSlide('minutes-wrapper', '00');
+                if (previousValues.seconds !== 0) updateWithSlide('seconds-wrapper', '00');
+                
+                previousValues = { days: 0, hours: 0, minutes: 0, seconds: 0 };
                 return;
             }
 
-            // Only update if values have changed
             if (t.days !== previousValues.days) {
-                updateWithFade(document.getElementById('days'), t.days);
+                updateWithSlide('days-wrapper', t.days);
             }
             if (t.hours !== previousValues.hours) {
-                updateWithFade(document.getElementById('hours'), t.hours.toString().padStart(2, '0'));
+                updateWithSlide('hours-wrapper', t.hours.toString().padStart(2, '0'));
             }
             if (t.minutes !== previousValues.minutes) {
-                updateWithFade(document.getElementById('minutes'), t.minutes.toString().padStart(2, '0'));
+                updateWithSlide('minutes-wrapper', t.minutes.toString().padStart(2, '0'));
             }
             if (t.seconds !== previousValues.seconds) {
-                updateWithFade(document.getElementById('seconds'), t.seconds.toString().padStart(2, '0'));
+                updateWithSlide('seconds-wrapper', t.seconds.toString().padStart(2, '0'));
             }
 
             previousValues = { days: t.days, hours: t.hours, minutes: t.minutes, seconds: t.seconds };
         }
 
-        // Initial update
         updateCountdown();
-
-        // Update every second
         setInterval(updateCountdown, 1000);
-
-        // Sync with server time every minute to prevent drift
         setInterval(() => {
-            // Force a complete refresh of all values
-            previousValues = {
-                days: -1,
-                hours: -1,
-                minutes: -1,
-                seconds: -1
-            };
+            previousValues = { days: -1, hours: -1, minutes: -1, seconds: -1 };
             updateCountdown();
         }, 60000);
     </script>
