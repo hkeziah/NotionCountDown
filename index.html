@@ -174,32 +174,30 @@
         const timezone = urlParams.get('timezone') || 'UTC';
 
         function formatEventDateTime() {
-            const dateObj = new Date(`${targetDate}T${targetTime}`);
-            
-            // Format date
-            const dateFormatter = new Intl.DateTimeFormat('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+            try {
+                const dateObj = new Date(`${targetDate}T${targetTime}:00${timezone === 'UTC' ? 'Z' : ''}`);
+                const formatter = new Intl.DateTimeFormat('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                    timeZone: timezone
+                });
 
-            // Format time
-            const timeFormatter = new Intl.DateTimeFormat('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-                timeZone: timezone
-            });
-
-            const dateStr = dateFormatter.format(dateObj);
-            const timeStr = timeFormatter.format(dateObj);
-            
-            document.getElementById('eventDateTime').textContent = 
-                `${dateStr} at ${timeStr} ${timezone}`;
+                const formattedDateTime = formatter.format(dateObj);
+                document.getElementById('eventDateTime').textContent = 
+                    `${formattedDateTime} ${timezone}`;
+            } catch (e) {
+                console.error('Error formatting date:', e);
+                document.getElementById('eventDateTime').textContent = 
+                    `${targetDate} at ${targetTime} ${timezone}`;
+            }
         }
 
         // Set target date in specified timezone
-        const targetDateTime = new Date(`${targetDate}T${targetTime}`);
+        const targetDateTime = new Date(`${targetDate}T${targetTime}:00${timezone === 'UTC' ? 'Z' : ''}`);
 
         function updateWithSlide(wrapperId, newValue) {
             const wrapper = document.getElementById(wrapperId);
