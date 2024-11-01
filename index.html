@@ -35,7 +35,7 @@
         }
 
         .toggle-container {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .countdown-container {
@@ -145,16 +145,16 @@
     </style>
 </head>
 <body>
-    <h2 id="eventDateTime"></h2>
     <div class="toggle-container">
         <label>
-            Select Timezone:
+            Your Timezone:
             <select id="timezoneToggle">
                 <option value="EST">EST</option>
                 <option value="NZDT">NZDT</option>
             </select>
         </label>
     </div>
+    <h2 id="eventDateTime"></h2>
     <div class="countdown-container">
         <div class="time-box">
             <div class="number-wrapper" id="days-wrapper">
@@ -199,6 +199,9 @@
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
                     timeZone: selectedTimezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland'
                 };
 
