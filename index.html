@@ -18,7 +18,6 @@
 
         body {
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -66,17 +65,6 @@
             margin-top: 10px;
         }
 
-        .event-name {
-            font-size: 1em;
-            color: #37352f;
-            text-align: center;
-            max-width: 100%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            margin-bottom: 20px;
-        }
-
         .fade-out {
             opacity: 0;
         }
@@ -103,7 +91,6 @@
     </style>
 </head>
 <body>
-    <div class="event-name" id="eventName"></div>
     <div class="countdown-container">
         <div class="time-box">
             <div class="number" id="days">0</div>
@@ -127,9 +114,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const targetDate = urlParams.get('date') || '2024-12-31';
         const targetTime = urlParams.get('time') || '00:00';
-        const eventName = urlParams.get('event') || 'Countdown';
-
-        document.getElementById('eventName').textContent = eventName;
 
         function updateWithFade(element, newValue) {
             if (element.textContent !== newValue.toString()) {
