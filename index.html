@@ -4,6 +4,7 @@
     <title>Event Countdown</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        /* ... Previous styles remain the same ... */
         * {
             margin: 0;
             padding: 0;
@@ -72,7 +73,6 @@
             transform: translateY(100%);
         }
 
-        /* Specific styles for seconds */
         .seconds-box {
             display: flex;
             flex-direction: column;
@@ -83,7 +83,7 @@
         .seconds-number {
             font-size: 1.875em;
             font-weight: bold;
-            color: #CCCCCC; /* Lighter grey for seconds */
+            color: #CCCCCC;
             min-width: 45px;
             text-align: center;
         }
@@ -99,7 +99,7 @@
 
         .seconds-label {
             font-size: 0.8em;
-            color: #CCCCCC; /* Lighter grey for seconds label */
+            color: #CCCCCC;
             text-transform: uppercase;
             letter-spacing: 1px;
             padding-bottom: 20px;
@@ -162,7 +162,33 @@
         const urlParams = new URLSearchParams(window.location.search);
         const targetDate = urlParams.get('date') || '2024-12-31';
         const targetTime = urlParams.get('time') || '00:00';
-        const targetDateTime = new Date(`${targetDate}T${targetTime}`);
+        const timezone = urlParams.get('timezone') || 'UTC'; // Default to UTC if not specified
+
+        // Create target date in the specified timezone
+        const targetDateString = `${targetDate}T${targetTime}`;
+        let targetDateTime;
+
+        try {
+            // Create date with explicit timezone
+            const formatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: timezone,
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+
+            // Parse the target date in the specified timezone
+            targetDateTime = new Date(targetDateString + 'Z').toLocaleString('en-US', {timeZone: timezone});
+            targetDateTime = new Date(targetDateTime);
+        } catch (e) {
+            // Fallback to UTC if timezone is invalid
+            console.error('Invalid timezone, falling back to UTC');
+            targetDateTime = new Date(targetDateString + 'Z');
+        }
 
         function updateWithSlide(wrapperId, newValue) {
             const wrapper = document.getElementById(wrapperId);
@@ -230,16 +256,12 @@
                 updateWithSlide('minutes-wrapper', t.minutes.toString().padStart(2, '0'));
             }
             
-            // Update seconds without animation
             document.getElementById('seconds').textContent = t.seconds.toString().padStart(2, '0');
 
             previousValues = { days: t.days, hours: t.hours, minutes: t.minutes, seconds: t.seconds };
         }
 
-        // Initial update
         updateCountdown();
-        
-        // Update every second
         setInterval(updateCountdown, 1000);
     </script>
 </body>
