@@ -33,6 +33,7 @@
             backdrop-filter: blur(5px);
             border-radius: 12px;
             width: fit-content;
+            align-items: flex-end; /* Align items to baseline */
         }
 
         .time-box {
@@ -42,14 +43,25 @@
             min-width: 70px;
         }
 
+        .time-box.seconds {
+            min-width: 52px; /* Adjusted for smaller size */
+        }
+
         .number-wrapper {
             position: relative;
-            height: 60px; /* Fixed height to prevent layout shift */
+            height: 60px;
             overflow: hidden;
             background: #fff;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             min-width: 60px;
+        }
+
+        .number-wrapper.seconds-wrapper {
+            height: 45px; /* 75% of original height */
+            min-width: 45px;
+            background: transparent;
+            box-shadow: none;
         }
 
         .number {
@@ -72,6 +84,14 @@
             transform: translateY(100%);
         }
 
+        .seconds .number {
+            position: static; /* Remove absolute positioning for seconds */
+            font-size: 1.875em; /* 75% of original 2.5em */
+            color: #999; /* Light grey for seconds */
+            padding: 7.5px; /* 75% of original padding */
+            transition: none; /* No animation for seconds */
+        }
+
         .label {
             font-size: 0.8em;
             color: #666;
@@ -79,6 +99,10 @@
             letter-spacing: 1px;
             padding-bottom: 20px;
             margin-top: 10px;
+        }
+
+        .seconds .label {
+            color: #999; /* Light grey for seconds label */
         }
 
         @media (max-width: 400px) {
@@ -91,13 +115,26 @@
                 min-width: 60px;
             }
 
+            .time-box.seconds {
+                min-width: 45px;
+            }
+
             .number-wrapper {
                 min-width: 50px;
                 height: 50px;
             }
 
+            .number-wrapper.seconds-wrapper {
+                height: 37.5px;
+                min-width: 37.5px;
+            }
+
             .number {
                 font-size: 2em;
+            }
+
+            .seconds .number {
+                font-size: 1.5em;
             }
 
             .label {
@@ -126,8 +163,8 @@
             </div>
             <div class="label">Min</div>
         </div>
-        <div class="time-box">
-            <div class="number-wrapper" id="seconds-wrapper">
+        <div class="time-box seconds">
+            <div class="number-wrapper seconds-wrapper">
                 <div class="number">00</div>
             </div>
             <div class="label">Sec</div>
@@ -142,26 +179,26 @@
 
         function updateWithSlide(wrapperId, newValue) {
             const wrapper = document.getElementById(wrapperId);
-            const currentNumber = wrapper.querySelector('.number');
             
+            // For seconds, just update the text
+            if (wrapperId === 'seconds-wrapper') {
+                wrapper.querySelector('.number').textContent = newValue;
+                return;
+            }
+            
+            const currentNumber = wrapper.querySelector('.number');
             if (currentNumber.textContent === newValue.toString()) {
                 return;
             }
 
             const oldNumber = currentNumber;
             const newNumber = document.createElement('div');
-            
             newNumber.className = 'number new';
             newNumber.textContent = newValue;
-            
             wrapper.appendChild(newNumber);
-            
-            // Trigger reflow
             wrapper.offsetHeight;
-            
             oldNumber.classList.add('old');
             newNumber.style.transform = 'translateY(0)';
-            
             setTimeout(() => {
                 oldNumber.remove();
             }, 300);
@@ -175,12 +212,13 @@
                 return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
             }
 
-            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-            return { days, hours, minutes, seconds, total: difference };
+            return {
+                total: difference,
+                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+                seconds: Math.floor((difference % (1000 * 60)) / 1000)
+            };
         }
 
         let previousValues = {
@@ -198,7 +236,6 @@
                 if (previousValues.hours !== 0) updateWithSlide('hours-wrapper', '00');
                 if (previousValues.minutes !== 0) updateWithSlide('minutes-wrapper', '00');
                 if (previousValues.seconds !== 0) updateWithSlide('seconds-wrapper', '00');
-                
                 previousValues = { days: 0, hours: 0, minutes: 0, seconds: 0 };
                 return;
             }
