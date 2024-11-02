@@ -1,13 +1,7 @@
 import React, { useState } from 'react';
 
 export default function CountdownTimer() {
-  const [selectedTimezone, setSelectedTimezone] = useState('EST');
   const [iframeKey, setIframeKey] = useState(0);
-
-  const handleTimezoneChange = (e) => {
-    setSelectedTimezone(e.target.value);
-    setIframeKey(prev => prev + 1);
-  };
 
   const iframeContent = `
 <!DOCTYPE html>
@@ -19,19 +13,6 @@ export default function CountdownTimer() {
             margin: 0;
             padding: 20px;
             color: #333;
-        }
-        .timezone-selector {
-            margin-bottom: 15px;
-        }
-        .timezone-selector select {
-            padding: 4px 8px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        .timezone-label {
-            font-size: 14px;
-            margin-right: 10px;
         }
         .date-display {
             font-size: 16px;
@@ -62,13 +43,6 @@ export default function CountdownTimer() {
     </style>
 </head>
 <body>
-    <div class="timezone-selector">
-        <label class="timezone-label">Your Timezone:</label>
-        <select id="timezone-select">
-            <option value="EST">EST</option>
-            <option value="NZDT">NZDT</option>
-        </select>
-    </div>
     <div class="date-display" id="date-display"></div>
     <div class="countdown-container">
         <div class="countdown-block">
@@ -90,9 +64,6 @@ export default function CountdownTimer() {
     </div>
 
     <script>
-        const timezoneSelect = document.getElementById('timezone-select');
-        timezoneSelect.value = '${selectedTimezone}';
-        
         // Get parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const paramDate = urlParams.get('date') || '2024-12-31';
@@ -116,27 +87,21 @@ export default function CountdownTimer() {
 
         const TARGET_UTC = getTargetUTC();
         
-        function formatDisplayDate(selectedTz) {
+        function formatDisplayDate(timezone) {
             // Calculate display date based on the target UTC time
             let displayDate;
+            const utcTime = TARGET_UTC.getTime();
             
-            if (selectedTz === paramTimezone) {
-                // If selected timezone matches parameter timezone, show original date/time
-                displayDate = new Date(\`\${paramDate}T\${paramTime}\`);
+            if (timezone === 'NZDT') {
+                // Add 13 hours for NZDT
+                displayDate = new Date(utcTime + (13 * 60 * 60 * 1000));
             } else {
-                // Convert UTC to the selected timezone
-                const utcTime = TARGET_UTC.getTime();
-                if (selectedTz === 'NZDT') {
-                    // Add 13 hours for NZDT
-                    displayDate = new Date(utcTime + (13 * 60 * 60 * 1000));
-                } else {
-                    // Subtract 5 hours for EST
-                    displayDate = new Date(utcTime - (5 * 60 * 60 * 1000));
-                }
+                // Subtract 5 hours for EST
+                displayDate = new Date(utcTime - (5 * 60 * 60 * 1000));
             }
 
             const options = {
-                timeZone: selectedTz === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
+                timeZone: timezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -149,8 +114,12 @@ export default function CountdownTimer() {
         }
 
         function updateDisplay() {
-            const timezone = timezoneSelect.value;
-            document.getElementById('date-display').textContent = formatDisplayDate(timezone);
+            const estDisplay = formatDisplayDate('EST');
+            const nzdtDisplay = formatDisplayDate('NZDT');
+            document.getElementById('date-display').innerHTML = \`
+                EST: \${estDisplay}<br>
+                NZDT: \${nzdtDisplay}
+            \`;
             
             const now = new Date();
             const diff = TARGET_UTC - now;
@@ -173,10 +142,6 @@ export default function CountdownTimer() {
             document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
             document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
         }
-
-        timezoneSelect.addEventListener('change', function() {
-            updateDisplay();
-        });
 
         updateDisplay();
         setInterval(updateDisplay, 1000);
