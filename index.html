@@ -1,143 +1,157 @@
-import React, { useState } from 'react';
-
-export default function CountdownTimer() {
-  const [iframeKey, setIframeKey] = useState(0);
-
-  const iframeContent = `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-        .datetime-display {
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-        .timezone-line {
-            font-size: 16px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .timezone-label {
-            font-weight: normal;
-            color: #666;
-            width: 85px;
+            background-color: #ffffff;
+            color: #000000;
+            font-family: 'Arial', sans-serif;
         }
         .countdown-container {
+            min-height: 100vh;
             display: flex;
-            gap: 20px;
-            align-items: flex-end;
-            margin-top: 30px;
-        }
-        .countdown-block {
-            text-align: center;
+            align-items: center;
+            justify-content: center;
         }
         .countdown-number {
-            font-size: 48px;
+            font-family: 'Arial', sans-serif;
             font-weight: bold;
+            width: 2ch;
+            display: inline-block;
+            text-align: center;
+            font-size: 48px;
             line-height: 1;
-            margin-bottom: 5px;
         }
         .countdown-label {
-            font-size: 12px;
+            font-size: 16px;
             text-transform: uppercase;
-            color: #666;
+            color: #666666;
+            margin-top: 5px;
         }
-        .countdown-block.seconds {
+        .seconds-block {
             opacity: 0.5;
+        }
+        .datetime-display {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        .number-container {
+            min-width: 80px;
+            text-align: center;
+            display: inline-block;
+            margin: 0 10px;
+        }
+        @media (max-width: 768px) {
+            .countdown-number {
+                font-size: 32px;
+            }
+            .countdown-label {
+                font-size: 14px;
+            }
+            .number-container {
+                min-width: 60px;
+                margin: 0 5px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="datetime-display">
-        <div class="timezone-line">
-            <span class="timezone-label">EST:</span>
-            <span id="est-date"></span>
-        </div>
-        <div class="timezone-line">
-            <span class="timezone-label">NZDT:</span>
-            <span id="nzdt-date"></span>
-        </div>
-    </div>
     <div class="countdown-container">
-        <div class="countdown-block">
-            <div class="countdown-number" id="days">00</div>
-            <div class="countdown-label">DAYS</div>
-        </div>
-        <div class="countdown-block">
-            <div class="countdown-number" id="hours">00</div>
-            <div class="countdown-label">HOURS</div>
-        </div>
-        <div class="countdown-block">
-            <div class="countdown-number" id="minutes">00</div>
-            <div class="countdown-label">MIN</div>
-        </div>
-        <div class="countdown-block seconds">
-            <div class="countdown-number" id="seconds">00</div>
-            <div class="countdown-label">SEC</div>
+        <div class="text-center">
+            <div class="datetime-display">
+                <div id="timezone1Display"></div>
+                <div id="timezone2Display"></div>
+            </div>
+            <div class="d-flex justify-content-center align-items-center flex-wrap">
+                <div class="number-container">
+                    <div class="countdown-number" id="days">00</div>
+                    <div class="countdown-label">Days</div>
+                </div>
+                <div class="number-container">
+                    <div class="countdown-number" id="hours">00</div>
+                    <div class="countdown-label">Hours</div>
+                </div>
+                <div class="number-container">
+                    <div class="countdown-number" id="minutes">00</div>
+                    <div class="countdown-label">Min</div>
+                </div>
+                <div class="number-container seconds-block">
+                    <div class="countdown-number" id="seconds">00</div>
+                    <div class="countdown-label">Sec</div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Get parameters from URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const paramDate = urlParams.get('date') || '2024-12-31';
-        const paramTime = urlParams.get('time') || '00:00';
-        const paramTimezone = urlParams.get('timezone') || 'EST';
+        // Default values
+        const DEFAULT_DATE = '2025-12-31';
+        const DEFAULT_TIME = '11:00';
+        const DEFAULT_TZ = 'EST';
+        const DEFAULT_ADDITIONAL_TZ = 'NZDT';
+        const DEFAULT_DATE_FORMAT = 'MMM D, YYYY at hh:mm a';
 
-        function formatDateForTimezone(date, timezone) {
+        // Parse URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const date = params.get('date') || DEFAULT_DATE;
+        const time = params.get('time') || DEFAULT_TIME;
+        const timezone = params.get('timezone') || DEFAULT_TZ;
+        const additionalTimeZone = params.get('additionalTimeZone') || DEFAULT_ADDITIONAL_TZ;
+        const dateFormat = params.get('format') || DEFAULT_DATE_FORMAT;
+
+        // Format date for display with custom format
+        function formatDate(date, timezone) {
             const options = {
-                timeZone: timezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
+                timeZone: timezone === 'EST' ? 'America/New_York' : 
+                         timezone === 'NZDT' ? 'Pacific/Auckland' : 'UTC',
                 year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: 'numeric',
+                month: dateFormat.includes('MMMM') ? 'long' : 
+                      dateFormat.includes('MMM') ? 'short' : 'numeric',
+                day: dateFormat.includes('DD') ? '2-digit' : 'numeric',
+                hour: dateFormat.includes('hh') ? '2-digit' : 'numeric',
                 minute: '2-digit',
-                hour12: true
+                hour12: !dateFormat.includes('HH')
             };
             
-            return new Intl.DateTimeFormat('en-US', options).format(date) + ' ' + timezone;
-        }
-
-        function getTargetDate() {
-            // Create date object in the parameter timezone
-            const targetDateStr = \`\${paramDate}T\${paramTime}\`;
-            const targetOptions = {
-                timeZone: paramTimezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
-            };
+            let formatted = new Intl.DateTimeFormat('en-US', options).format(date);
             
-            // Convert to UTC
-            const targetDate = new Date(targetDateStr);
-            if (paramTimezone === 'EST') {
-                targetDate.setTime(targetDate.getTime() + (5 * 60 * 60 * 1000)); // EST to UTC
-            } else {
-                targetDate.setTime(targetDate.getTime() - (13 * 60 * 60 * 1000)); // NZDT to UTC
+            // Apply custom formatting based on URL parameter
+            if (dateFormat.includes('YYYY')) {
+                formatted = formatted.replace(/\d{4}/, date.getFullYear());
             }
             
-            return targetDate;
+            // Handle AM/PM formatting
+            if (dateFormat.includes('a')) {
+                formatted = formatted.replace('AM', 'am').replace('PM', 'pm');
+            }
+
+            return `${formatted} ${timezone}`;
         }
 
-        const TARGET_DATE = getTargetDate();
+        // Set target date with proper timezone conversion
+        const targetDate = new Date(date + 'T' + time);
+        const utcDate = new Date(targetDate.toLocaleString('en-US', {
+            timeZone: 'America/New_York'
+        }));
 
-        function updateDisplay() {
-            // Format the target date for both timezones
-            document.getElementById('est-date').textContent = formatDateForTimezone(TARGET_DATE, 'EST');
-            document.getElementById('nzdt-date').textContent = formatDateForTimezone(TARGET_DATE, 'NZDT');
-            
+        // Update displays
+        document.getElementById('timezone1Display').textContent = formatDate(utcDate, timezone);
+        document.getElementById('timezone2Display').textContent = formatDate(utcDate, additionalTimeZone);
+
+        function updateCountdown() {
             const now = new Date();
-            const diff = TARGET_DATE - now;
+            const diff = utcDate - now;
             
             if (diff <= 0) {
-                document.getElementById('days').textContent = '00';
-                document.getElementById('hours').textContent = '00';
-                document.getElementById('minutes').textContent = '00';
-                document.getElementById('seconds').textContent = '00';
+                ['days', 'hours', 'minutes', 'seconds'].forEach(id => {
+                    document.getElementById(id).textContent = '00';
+                });
                 return;
             }
             
@@ -152,19 +166,9 @@ export default function CountdownTimer() {
             document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
         }
 
-        updateDisplay();
-        setInterval(updateDisplay, 1000);
+        // Initialize countdown
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
     </script>
 </body>
 </html>
-`;
-
-  return (
-    <iframe
-      key={iframeKey}
-      srcDoc={iframeContent}
-      className="w-full h-64 border-none"
-      title="Countdown Timer"
-    />
-  );
-}
