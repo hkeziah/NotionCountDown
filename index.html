@@ -14,14 +14,26 @@ export default function CountdownTimer() {
             padding: 20px;
             color: #333;
         }
-        .date-display {
-            font-size: 16px;
+        .datetime-display {
             margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .timezone-line {
+            font-size: 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .timezone-label {
+            font-weight: normal;
+            color: #666;
+            width: 85px;
         }
         .countdown-container {
             display: flex;
             gap: 20px;
             align-items: flex-end;
+            margin-top: 30px;
         }
         .countdown-block {
             text-align: center;
@@ -43,7 +55,16 @@ export default function CountdownTimer() {
     </style>
 </head>
 <body>
-    <div class="date-display" id="date-display"></div>
+    <div class="datetime-display">
+        <div class="timezone-line">
+            <span class="timezone-label">EST:</span>
+            <span id="est-date"></span>
+        </div>
+        <div class="timezone-line">
+            <span class="timezone-label">NZDT:</span>
+            <span id="nzdt-date"></span>
+        </div>
+    </div>
     <div class="countdown-container">
         <div class="countdown-block">
             <div class="countdown-number" id="days">00</div>
@@ -70,38 +91,37 @@ export default function CountdownTimer() {
         const paramTime = urlParams.get('time') || '00:00';
         const paramTimezone = urlParams.get('timezone') || 'EST';
 
-        // Convert the parameter date/time to UTC
         function getTargetUTC() {
-            // Create a date object in the parameter timezone
             const targetDate = new Date(\`\${paramDate}T\${paramTime}\`);
             
-            // If the parameter timezone is NZDT, adjust for UTC+13
             if (paramTimezone === 'NZDT') {
-                // Subtract 13 hours to get UTC
                 return new Date(targetDate.getTime() - (13 * 60 * 60 * 1000));
             } else {
-                // For EST (UTC-5), add 5 hours to get UTC
                 return new Date(targetDate.getTime() + (5 * 60 * 60 * 1000));
             }
         }
 
         const TARGET_UTC = getTargetUTC();
-        
-        function formatDisplayDate(timezone) {
-            // Calculate display date based on the target UTC time
+
+        function createNZDTDate(estDate) {
+            // Create a new date object for NZDT (next day, 6:00 PM)
+            const nzdtDate = new Date(estDate);
+            nzdtDate.setDate(nzdtDate.getDate() + 1); // Move to next day
+            nzdtDate.setHours(18, 0, 0, 0); // Set to 6:00 PM
+            return nzdtDate;
+        }
+
+        function formatDateForTimezone(timezone) {
             let displayDate;
-            const utcTime = TARGET_UTC.getTime();
-            
-            if (timezone === 'NZDT') {
-                // Add 13 hours for NZDT
-                displayDate = new Date(utcTime + (13 * 60 * 60 * 1000));
+            if (timezone === 'EST') {
+                // For EST, just use the original date/time
+                displayDate = new Date(\`\${paramDate}T\${paramTime}\`);
             } else {
-                // Subtract 5 hours for EST
-                displayDate = new Date(utcTime - (5 * 60 * 60 * 1000));
+                // For NZDT, create a date that's the next day at 6:00 PM
+                displayDate = createNZDTDate(new Date(\`\${paramDate}T\${paramTime}\`));
             }
 
             const options = {
-                timeZone: timezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -110,16 +130,14 @@ export default function CountdownTimer() {
                 hour12: true
             };
             
-            return new Intl.DateTimeFormat('en-US', options).format(displayDate);
+            const formattedDate = new Intl.DateTimeFormat('en-US', options).format(displayDate);
+            return \`\${formattedDate} \${timezone}\`;
         }
 
         function updateDisplay() {
-            const estDisplay = formatDisplayDate('EST');
-            const nzdtDisplay = formatDisplayDate('NZDT');
-            document.getElementById('date-display').innerHTML = \`
-                EST: \${estDisplay}<br>
-                NZDT: \${nzdtDisplay}
-            \`;
+            // Update both timezone displays
+            document.getElementById('est-date').textContent = formatDateForTimezone('EST');
+            document.getElementById('nzdt-date').textContent = formatDateForTimezone('NZDT');
             
             const now = new Date();
             const diff = TARGET_UTC - now;
