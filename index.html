@@ -1,302 +1,163 @@
+import React, { useState } from 'react';
+
+export default function CountdownTimer() {
+  const [selectedTimezone, setSelectedTimezone] = useState('EST');
+  const [iframeKey, setIframeKey] = useState(0);
+
+  const handleTimezoneChange = (e) => {
+    setSelectedTimezone(e.target.value);
+    setIframeKey(prev => prev + 1);
+  };
+
+  const iframeContent = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Event Countdown</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
         body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: transparent;
-            padding: 20px 10px;
-        }
-
-        h2, h3 {
-            font-size: 1.2em;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
             color: #333;
-            font-weight: normal;
+        }
+        .timezone-selector {
+            margin-bottom: 15px;
+        }
+        .timezone-selector select {
+            padding: 4px 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .timezone-label {
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .date-display {
+            font-size: 16px;
             margin-bottom: 20px;
-            text-align: center;
         }
-
-        .toggle-container {
-            margin-bottom: 10px;
-        }
-
         .countdown-container {
             display: flex;
-            gap: 15px;
-            padding: 0 15px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            border-radius: 12px;
-            width: fit-content;
+            gap: 20px;
             align-items: flex-end;
         }
-
-        .time-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .number-wrapper {
-            position: relative;
-            height: 60px;
-            overflow: hidden;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            min-width: 60px;
-        }
-
-        .number {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #333;
-            padding: 10px;
-            transform: translateY(0);
-            transition: transform 0.3s ease-out;
-        }
-
-        .number.old {
-            transform: translateY(-100%);
-        }
-
-        .number.new {
-            transform: translateY(100%);
-        }
-
-        .seconds-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 2px;
-        }
-
-        .seconds-number {
-            font-size: 1.875em;
-            font-weight: bold;
-            color: #CCCCCC;
-            min-width: 45px;
+        .countdown-block {
             text-align: center;
         }
-
-        .label {
-            font-size: 0.8em;
+        .countdown-number {
+            font-size: 48px;
+            font-weight: bold;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        .countdown-label {
+            font-size: 12px;
+            text-transform: uppercase;
             color: #666;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding-bottom: 20px;
-            margin-top: 10px;
         }
-
-        .seconds-label {
-            font-size: 0.8em;
-            color: #CCCCCC;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding-bottom: 20px;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 400px) {
-            .countdown-container {
-                gap: 10px;
-                padding: 0 10px;
-            }
-
-            .number-wrapper {
-                min-width: 50px;
-                height: 50px;
-            }
-
-            .number {
-                font-size: 2em;
-            }
-
-            .seconds-number {
-                font-size: 1.5em;
-                min-width: 37px;
-            }
-
-            .label, .seconds-label {
-                font-size: 0.7em;
-            }
+        .countdown-block.seconds {
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
-    <div class="toggle-container">
-        <label>
-            Your Timezone:
-            <select id="timezoneToggle">
-                <option value="EST">EST</option>
-                <option value="NZDT">NZDT</option>
-            </select>
-        </label>
+    <div class="timezone-selector">
+        <label class="timezone-label">Your Timezone:</label>
+        <select id="timezone-select">
+            <option value="EST">EST</option>
+            <option value="NZDT">NZDT</option>
+        </select>
     </div>
-    <h2 id="eventDateTime"></h2>
+    <div class="date-display" id="date-display"></div>
     <div class="countdown-container">
-        <div class="time-box">
-            <div class="number-wrapper" id="days-wrapper">
-                <div class="number">0</div>
-            </div>
-            <div class="label">Days</div>
+        <div class="countdown-block">
+            <div class="countdown-number" id="days">00</div>
+            <div class="countdown-label">DAYS</div>
         </div>
-        <div class="time-box">
-            <div class="number-wrapper" id="hours-wrapper">
-                <div class="number">00</div>
-            </div>
-            <div class="label">Hours</div>
+        <div class="countdown-block">
+            <div class="countdown-number" id="hours">00</div>
+            <div class="countdown-label">HOURS</div>
         </div>
-        <div class="time-box">
-            <div class="number-wrapper" id="minutes-wrapper">
-                <div class="number">00</div>
-            </div>
-            <div class="label">Min</div>
+        <div class="countdown-block">
+            <div class="countdown-number" id="minutes">00</div>
+            <div class="countdown-label">MIN</div>
         </div>
-        <div class="seconds-box">
-            <div id="seconds" class="seconds-number">00</div>
-            <div class="seconds-label">Sec</div>
+        <div class="countdown-block seconds">
+            <div class="countdown-number" id="seconds">00</div>
+            <div class="countdown-label">SEC</div>
         </div>
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetDate = urlParams.get('date') || '2024-12-31';
-        const targetTime = urlParams.get('time') || '00:00';
-        let selectedTimezone = 'EST';
+        const timezoneSelect = document.getElementById('timezone-select');
+        timezoneSelect.value = '${selectedTimezone}';
+        
+        // Fixed target time - New Year's Eve 2024 midnight EST (05:00 UTC)
+        const TARGET_UTC = new Date('2024-12-31T05:00:00Z');
+        
+        function formatDisplayDate(timezone) {
+            // For NZDT, we need to show January 1st at 6:00 PM
+            const displayDate = timezone === 'EST' 
+                ? new Date('2024-12-31T05:00:00Z')  // Dec 31 midnight EST
+                : new Date('2025-01-01T06:00:00+13:00');  // Jan 1 6:00 PM NZDT
 
-        document.getElementById('timezoneToggle').addEventListener('change', (event) => {
-            selectedTimezone = event.target.value;
-            formatEventDateTime();
-            updateCountdown();
-        });
-
-        function formatEventDateTime() {
-            try {
-                // Create a date string with explicit timezone
-                const options = {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true,
-                    
-                };
-
-                const tzDate = new Date(`${targetDate}T${targetTime}`);
-                const formatter = new Intl.DateTimeFormat('en-US', options);
-                const formattedDateTime = formatter.format(tzDate);
-
-                document.getElementById('eventDateTime').textContent = formattedDateTime;
-            } catch (e) {
-                console.error('Error formatting date:', e);
-                document.getElementById('eventDateTime').textContent = `${targetDate} at ${targetTime}`;
-            }
-        }
-
-        // Calculate target date for countdown (independent of local timezone)
-        function getTargetDate() {
-            return new Date(`${targetDate}T${targetTime}:00Z`);
-        }
-
-        function updateWithSlide(wrapperId, newValue) {
-            const wrapper = document.getElementById(wrapperId);
-            const currentNumber = wrapper.querySelector('.number');
-            if (currentNumber.textContent === newValue.toString()) {
-                return;
-            }
-
-            const oldNumber = currentNumber;
-            const newNumber = document.createElement('div');
-            newNumber.className = 'number new';
-            newNumber.textContent = newValue;
-            wrapper.appendChild(newNumber);
-            wrapper.offsetHeight;
-            oldNumber.classList.add('old');
-            newNumber.style.transform = 'translateY(0)';
-            setTimeout(() => {
-                oldNumber.remove();
-            }, 300);
-        }
-
-        function getTimeRemaining() {
-            const now = new Date();
-            const targetDateTime = getTargetDate();
-            const difference = targetDateTime.getTime() - now.getTime();
-
-            if (difference <= 0) {
-                return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
-            }
-
-            return {
-                total: difference,
-                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-                hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-                minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-                seconds: Math.floor((difference % (1000 * 60)) / 1000)
+            const options = {
+                timeZone: timezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
             };
+            
+            return new Intl.DateTimeFormat('en-US', options).format(displayDate);
         }
 
-        let previousValues = {
-            days: -1,
-            hours: -1,
-            minutes: -1,
-            seconds: -1
-        };
-
-        function updateCountdown() {
-            const t = getTimeRemaining();
-
-            if (t.total <= 0) {
-                if (previousValues.days !== 0) updateWithSlide('days-wrapper', 0);
-                if (previousValues.hours !== 0) updateWithSlide('hours-wrapper', '00');
-                if (previousValues.minutes !== 0) updateWithSlide('minutes-wrapper', '00');
+        function updateDisplay() {
+            const timezone = timezoneSelect.value;
+            document.getElementById('date-display').textContent = formatDisplayDate(timezone);
+            
+            const now = new Date();
+            const diff = TARGET_UTC - now;
+            
+            if (diff <= 0) {
+                document.getElementById('days').textContent = '00';
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('minutes').textContent = '00';
                 document.getElementById('seconds').textContent = '00';
-                previousValues = { days: 0, hours: 0, minutes: 0, seconds: 0 };
                 return;
-            }
-
-            if (t.days !== previousValues.days) {
-                updateWithSlide('days-wrapper', t.days);
-            }
-            if (t.hours !== previousValues.hours) {
-                updateWithSlide('hours-wrapper', t.hours.toString().padStart(2, '0'));
-            }
-            if (t.minutes !== previousValues.minutes) {
-                updateWithSlide('minutes-wrapper', t.minutes.toString().padStart(2, '0'));
             }
             
-            document.getElementById('seconds').textContent = t.seconds.toString().padStart(2, '0');
-
-            previousValues = { days: t.days, hours: t.hours, minutes: t.minutes, seconds: t.seconds };
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('days').textContent = days.toString().padStart(2, '0');
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
         }
 
-        // Initialize the display
-        formatEventDateTime();
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
+        timezoneSelect.addEventListener('change', function() {
+            updateDisplay();
+        });
+
+        updateDisplay();
+        setInterval(updateDisplay, 1000);
     </script>
 </body>
 </html>
+`;
+
+  return (
+    <iframe
+      key={iframeKey}
+      srcDoc={iframeContent}
+      className="w-full h-64 border-none"
+      title="Countdown Timer"
+    />
+  );
+}
