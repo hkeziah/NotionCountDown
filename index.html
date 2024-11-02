@@ -93,17 +93,50 @@ export default function CountdownTimer() {
         const timezoneSelect = document.getElementById('timezone-select');
         timezoneSelect.value = '${selectedTimezone}';
         
-        // Fixed target time - New Year's Eve 2024 midnight EST (05:00 UTC)
-        const TARGET_UTC = new Date('2024-12-31T05:00:00Z');
+        // Get parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramDate = urlParams.get('date') || '2024-12-31';
+        const paramTime = urlParams.get('time') || '00:00';
+        const paramTimezone = urlParams.get('timezone') || 'EST';
+
+        // Convert the parameter date/time to UTC
+        function getTargetUTC() {
+            // Create a date object in the parameter timezone
+            const targetDate = new Date(\`\${paramDate}T\${paramTime}\`);
+            
+            // If the parameter timezone is NZDT, adjust for UTC+13
+            if (paramTimezone === 'NZDT') {
+                // Subtract 13 hours to get UTC
+                return new Date(targetDate.getTime() - (13 * 60 * 60 * 1000));
+            } else {
+                // For EST (UTC-5), add 5 hours to get UTC
+                return new Date(targetDate.getTime() + (5 * 60 * 60 * 1000));
+            }
+        }
+
+        const TARGET_UTC = getTargetUTC();
         
-        function formatDisplayDate(timezone) {
-            // For NZDT, we need to show January 1st at 6:00 PM
-            const displayDate = timezone === 'EST' 
-                ? new Date('2024-12-31T05:00:00Z')  // Dec 31 midnight EST
-                : new Date('2025-01-01T06:00:00+13:00');  // Jan 1 6:00 PM NZDT
+        function formatDisplayDate(selectedTz) {
+            // Calculate display date based on the target UTC time
+            let displayDate;
+            
+            if (selectedTz === paramTimezone) {
+                // If selected timezone matches parameter timezone, show original date/time
+                displayDate = new Date(\`\${paramDate}T\${paramTime}\`);
+            } else {
+                // Convert UTC to the selected timezone
+                const utcTime = TARGET_UTC.getTime();
+                if (selectedTz === 'NZDT') {
+                    // Add 13 hours for NZDT
+                    displayDate = new Date(utcTime + (13 * 60 * 60 * 1000));
+                } else {
+                    // Subtract 5 hours for EST
+                    displayDate = new Date(utcTime - (5 * 60 * 60 * 1000));
+                }
+            }
 
             const options = {
-                timeZone: timezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
+                timeZone: selectedTz === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
