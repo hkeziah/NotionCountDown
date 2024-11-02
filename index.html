@@ -91,37 +91,9 @@ export default function CountdownTimer() {
         const paramTime = urlParams.get('time') || '00:00';
         const paramTimezone = urlParams.get('timezone') || 'EST';
 
-        function getTargetUTC() {
-            const targetDate = new Date(\`\${paramDate}T\${paramTime}\`);
-            
-            if (paramTimezone === 'NZDT') {
-                return new Date(targetDate.getTime() - (13 * 60 * 60 * 1000));
-            } else {
-                return new Date(targetDate.getTime() + (5 * 60 * 60 * 1000));
-            }
-        }
-
-        const TARGET_UTC = getTargetUTC();
-
-        function createNZDTDate(estDate) {
-            // Create a new date object for NZDT (next day, 6:00 PM)
-            const nzdtDate = new Date(estDate);
-            nzdtDate.setDate(nzdtDate.getDate() + 1); // Move to next day
-            nzdtDate.setHours(18, 0, 0, 0); // Set to 6:00 PM
-            return nzdtDate;
-        }
-
-        function formatDateForTimezone(timezone) {
-            let displayDate;
-            if (timezone === 'EST') {
-                // For EST, just use the original date/time
-                displayDate = new Date(\`\${paramDate}T\${paramTime}\`);
-            } else {
-                // For NZDT, create a date that's the next day at 6:00 PM
-                displayDate = createNZDTDate(new Date(\`\${paramDate}T\${paramTime}\`));
-            }
-
+        function formatDateForTimezone(date, timezone) {
             const options = {
+                timeZone: timezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -130,17 +102,36 @@ export default function CountdownTimer() {
                 hour12: true
             };
             
-            const formattedDate = new Intl.DateTimeFormat('en-US', options).format(displayDate);
-            return \`\${formattedDate} \${timezone}\`;
+            return new Intl.DateTimeFormat('en-US', options).format(date) + ' ' + timezone;
         }
 
+        function getTargetDate() {
+            // Create date object in the parameter timezone
+            const targetDateStr = \`\${paramDate}T\${paramTime}\`;
+            const targetOptions = {
+                timeZone: paramTimezone === 'EST' ? 'America/New_York' : 'Pacific/Auckland',
+            };
+            
+            // Convert to UTC
+            const targetDate = new Date(targetDateStr);
+            if (paramTimezone === 'EST') {
+                targetDate.setTime(targetDate.getTime() + (5 * 60 * 60 * 1000)); // EST to UTC
+            } else {
+                targetDate.setTime(targetDate.getTime() - (13 * 60 * 60 * 1000)); // NZDT to UTC
+            }
+            
+            return targetDate;
+        }
+
+        const TARGET_DATE = getTargetDate();
+
         function updateDisplay() {
-            // Update both timezone displays
-            document.getElementById('est-date').textContent = formatDateForTimezone('EST');
-            document.getElementById('nzdt-date').textContent = formatDateForTimezone('NZDT');
+            // Format the target date for both timezones
+            document.getElementById('est-date').textContent = formatDateForTimezone(TARGET_DATE, 'EST');
+            document.getElementById('nzdt-date').textContent = formatDateForTimezone(TARGET_DATE, 'NZDT');
             
             const now = new Date();
-            const diff = TARGET_UTC - now;
+            const diff = TARGET_DATE - now;
             
             if (diff <= 0) {
                 document.getElementById('days').textContent = '00';
