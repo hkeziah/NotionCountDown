@@ -23,22 +23,22 @@
             width: 2ch;
             display: inline-block;
             text-align: center;
-            font-size: 48px;
+            font-size: 32px;
             line-height: 1;
         }
         .countdown-label {
             font-size: 16px;
             text-transform: uppercase;
             color: #666666;
-            margin-top: 5px;
+            margin-top: 2px;
         }
         .seconds-block {
             opacity: 0.5;
         }
         .datetime-display {
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.4;
+            margin-bottom: 10px;
             color: #000000;
         }
         .number-container {
@@ -124,8 +124,8 @@
             // Convert AM/PM to lowercase
             formatted = formatted.replace('AM', 'am').replace('PM', 'pm');
             
-            // Add timezone
-            return `${formatted} ${timezone}`;
+            // Add timezone without the label
+            return formatted + ' ' + timezone;
         }
 
         // Set target date with proper timezone conversion
