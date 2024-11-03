@@ -20,11 +20,11 @@
         .countdown-number {
             font-family: 'Arial', sans-serif;
             font-weight: bold;
-            width: 2ch;
             display: inline-block;
             text-align: center;
             font-size: 32px;
             line-height: 1;
+            margin: 0 4px;
         }
         .countdown-label {
             font-size: 16px;
@@ -36,27 +36,29 @@
             opacity: 0.5;
         }
         .datetime-display {
-            font-size: 16px;
+            font-size: 18px;
+            font-weight: bold;
             line-height: 1.4;
-            margin-bottom: 10px;
+            margin-top: 8px;
             color: #000000;
         }
         .number-container {
-            min-width: 80px;
             text-align: center;
-            display: inline-block;
-            margin: 0 10px;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 8px;
         }
         @media (max-width: 768px) {
             .countdown-number {
                 font-size: 32px;
+                margin: 0 2px;
             }
             .countdown-label {
                 font-size: 14px;
             }
             .number-container {
-                min-width: 60px;
-                margin: 0 5px;
+                margin: 0 4px;
             }
         }
     </style>
@@ -64,10 +66,6 @@
 <body>
     <div class="countdown-container">
         <div class="text-center">
-            <div class="datetime-display">
-                <div id="timezone1Display"></div>
-                <div id="timezone2Display"></div>
-            </div>
             <div class="d-flex justify-content-center align-items-center flex-wrap">
                 <div class="number-container">
                     <div class="countdown-number" id="days">00</div>
@@ -86,6 +84,10 @@
                     <div class="countdown-label">Sec</div>
                 </div>
             </div>
+            <div class="datetime-display">
+                <div id="timezone1Display"></div>
+                <div id="timezone2Display"></div>
+            </div>
         </div>
     </div>
 
@@ -94,14 +96,13 @@
         const DEFAULT_DATE = '2024-12-31';
         const DEFAULT_TIME = '11:00';
         const DEFAULT_TZ = 'EST';
-        const DEFAULT_ADDITIONAL_TZ = 'NZDT';
 
         // Parse URL parameters
         const params = new URLSearchParams(window.location.search);
         const date = params.get('date') || DEFAULT_DATE;
         const time = params.get('time') || DEFAULT_TIME;
         const timezone = params.get('timezone') || DEFAULT_TZ;
-        const additionalTimeZone = params.get('additionalTimeZone') || DEFAULT_ADDITIONAL_TZ;
+        const additionalTimeZone = params.get('additionalTimeZone');
 
         // Format date for display with proper timezone
         function formatDate(date, timezone) {
@@ -136,7 +137,14 @@
 
         // Update displays
         document.getElementById('timezone1Display').textContent = formatDate(utcDate, timezone);
-        document.getElementById('timezone2Display').textContent = formatDate(utcDate, additionalTimeZone);
+        
+        // Only show second timezone if specified in URL
+        const timezone2Display = document.getElementById('timezone2Display');
+        if (additionalTimeZone) {
+            timezone2Display.textContent = formatDate(utcDate, additionalTimeZone);
+        } else {
+            timezone2Display.style.display = 'none';
+        }
 
         function updateCountdown() {
             const now = new Date();
