@@ -91,11 +91,10 @@
 
     <script>
         // Default values
-        const DEFAULT_DATE = '2025-12-31';
+        const DEFAULT_DATE = '2024-12-31';
         const DEFAULT_TIME = '11:00';
         const DEFAULT_TZ = 'EST';
         const DEFAULT_ADDITIONAL_TZ = 'NZDT';
-        const DEFAULT_DATE_FORMAT = 'MMM D, YYYY at hh:mm a';
 
         // Parse URL parameters
         const params = new URLSearchParams(window.location.search);
@@ -103,34 +102,29 @@
         const time = params.get('time') || DEFAULT_TIME;
         const timezone = params.get('timezone') || DEFAULT_TZ;
         const additionalTimeZone = params.get('additionalTimeZone') || DEFAULT_ADDITIONAL_TZ;
-        const dateFormat = params.get('format') || DEFAULT_DATE_FORMAT;
 
-        // Format date for display with custom format
+        // Format date for display with proper timezone
         function formatDate(date, timezone) {
             const options = {
                 timeZone: timezone === 'EST' ? 'America/New_York' : 
                          timezone === 'NZDT' ? 'Pacific/Auckland' : 'UTC',
                 year: 'numeric',
-                month: dateFormat.includes('MMMM') ? 'long' : 
-                      dateFormat.includes('MMM') ? 'short' : 'numeric',
-                day: dateFormat.includes('DD') ? '2-digit' : 'numeric',
-                hour: dateFormat.includes('hh') ? '2-digit' : 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
                 minute: '2-digit',
-                hour12: !dateFormat.includes('HH')
+                hour12: true
             };
             
             let formatted = new Intl.DateTimeFormat('en-US', options).format(date);
             
-            // Apply custom formatting based on URL parameter
-            if (dateFormat.includes('YYYY')) {
-                formatted = formatted.replace(/\d{4}/, date.getFullYear());
-            }
+            // Remove the comma after the year and add 'at'
+            formatted = formatted.replace(/(\d{4}),/, '$1 at');
             
-            // Handle AM/PM formatting
-            if (dateFormat.includes('a')) {
-                formatted = formatted.replace('AM', 'am').replace('PM', 'pm');
-            }
-
+            // Convert AM/PM to lowercase
+            formatted = formatted.replace('AM', 'am').replace('PM', 'pm');
+            
+            // Add timezone
             return `${formatted} ${timezone}`;
         }
 
